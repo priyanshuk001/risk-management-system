@@ -1,10 +1,12 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
+
 // Generate JWT token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "10h" });
 };
+
 
 // Register User
 exports.registerUser = async (req, res) => {
@@ -64,26 +66,27 @@ exports.loginUser = async (req, res) => {
     } catch (err) {
         res
             .status(500)
-            .json({ message: "Error registering user", error: err.message });
+            .json({ message: "Error logging in user", error: err.message });
     }
 };
 
+
 // Get User info
-// exports.getUserInfo = async (req, res) => {
-//   try {
-//     const user = await User.findById(req.user.id).select("-password");
+exports.getUserInfo = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
 
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-//     res.status(200).json(user);
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ message: "Error registering user", error: err.message });
-//   }
-// };
+    res.status(200).json(user);
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "Error registering user", error: err.message });
+  }
+};
 
 
 
