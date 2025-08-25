@@ -5,6 +5,7 @@ const path = require("path");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const portfolioRoutes = require("./routes/portfolioRoutes");
+const assetRoutes = require("./routes/assetRoutes");
 
 
 const app = express();
@@ -27,6 +28,7 @@ connectDB();
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/portfolio", portfolioRoutes);
+app.use("/api/assets", assetRoutes);
 
 
 const PORT = process.env.PORT || 5000;
