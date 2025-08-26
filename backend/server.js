@@ -28,7 +28,8 @@ connectDB();
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/portfolio", portfolioRoutes);
-app.use("/api/assets", assetRoutes);
+app.use("/api/v1/assets", assetRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;

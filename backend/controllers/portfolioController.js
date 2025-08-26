@@ -31,13 +31,14 @@ exports.add_asset = async (req, res) => {
     const Model = getModel(type);
 
     if (type === "Bond") {
-      if (!name || !quantity || !buyPrice || !couponRate || !maturityDate) {
+      if (!name || !symbol || !quantity || !buyPrice || !couponRate || !maturityDate) {
         return res.status(400).json({ message: "All fields are required" });
       }
 
       const newBond = new Model({
         userId,
         name,
+        symbol,
         quantity,
         buyPrice,
         couponRate,
@@ -47,6 +48,7 @@ exports.add_asset = async (req, res) => {
 
       await newBond.save();
       return res.status(201).json(newBond);
+
     } else {
       if (!name || !quantity || !buyPrice || !symbol) {
         return res.status(400).json({ message: "All fields are required" });
@@ -100,26 +102,25 @@ exports.update_asset = async (req, res) => {
 // ✅ Delete asset
 exports.delete_asset = async (req, res) => {
   try {
-    const assetId = req.params.id;
     const userId = req.user.id;
-    const { type } = req.body; // Pass asset type in request body (equity, bond, etc.)
+    const { type, id } = req.params;   // ⬅️ type comes from URL params now
 
-    const Model = getModel(type);
+    const Model = getModel(type);      // bond, equity, commodity, etc.
     if (!Model) {
       return res.status(400).json({ message: "Invalid asset type" });
     }
 
-    const asset = await Model.findOneAndDelete({ _id: assetId, userId });
+    const asset = await Model.findOneAndDelete({ _id: id, userId });
     if (!asset) {
       return res.status(404).json({ message: "Asset not found" });
     }
 
-    res.status(200).json({ message: "Asset deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(200).json({ message: `${type} deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 
 // ✅ Get all assets of a type
