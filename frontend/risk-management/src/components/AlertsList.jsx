@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UserContext } from '../../context/UserContext'; // adjust path if needed
+import { UserContext } from '../context/UserContext'; // adjust path if needed
 
 const AlertsList = () => {
   const { user } = useContext(UserContext); // get user data from context

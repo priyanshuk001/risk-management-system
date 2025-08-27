@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const portfolioRoutes = require("./routes/portfolioRoutes");
 const assetRoutes = require("./routes/assetRoutes");
+const alertRoutes = require("./routes/alertRoutes");
 
 
 const app = express();
@@ -29,6 +30,7 @@ connectDB();
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/portfolio", portfolioRoutes);
 app.use("/api/v1/assets", assetRoutes);
+app.use("/api/v1/alerts", alertRoutes);
 
 
 

@@ -1,7 +1,7 @@
 // pages/Portfolio.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { BASE_URL, API_PATHS } from "../utils/apiPaths";
+import { BASE_URL, API_PATHS } from "../../utils/apiPaths";
 
 const Portfolio = () => {
   const [assets, setAssets] = useState([]);

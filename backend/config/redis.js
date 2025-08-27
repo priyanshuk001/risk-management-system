@@ -6,11 +6,11 @@ const redis = new Redis({
 });
 
 redis.on("connect", () => {
-  console.log("✅ Connected to Redis");
+  console.log("Connected to Redis");
 });
 
 redis.on("error", (err) => {
-  console.error("❌ Redis error:", err);
+  console.error("Redis error:", err);
 });
 
 module.exports = redis;
