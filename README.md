@@ -32,7 +32,7 @@ To get a local copy up and running, follow these simple steps.
 
 1.  **Clone the repository:**
     ```sh
-    git clone [https://github.com/your-username/risk-management-system-frontend.git](https://github.com/your-username/risk-management-system-frontend.git)
+    git clone [https://github.com/your-username/risk-management-system-frontend.git](https://github.com/priyanshuk001/risk-management-system.git)
     ```
 
 2.  **Navigate to the project directory:**
