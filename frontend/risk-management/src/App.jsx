@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,24 +6,91 @@ import {
   Navigate,
 } from "react-router-dom";
 
+import UserProvider, { UserContext } from "./context/UserContext";
+
+// Auth Pages
 import Login from "./pages/Auth/Login";
 import Signup from "./pages/Auth/Signup";
+
+// Dashboard Pages
 import Home from "./pages/Dashboard/Home";
+import Portfolio from "./pages/Dashboard/Portfolio";
+import RiskMetrics from "./pages/Dashboard/RiskMetrics";
+import Alerts from "./pages/Dashboard/Alerts";
+import HistoricalPrices from "./pages/Dashboard/HistoricalPrices";
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Root />} />
-        <Route path="/login" exact element={<Login />} />
-        <Route path="/signup" exact element={<Signup />} />
-        <Route path="/home" exact element={<Home />} />
-      </Routes>
-    </Router>
-  )
-}
+    <UserProvider>
+      <Router>
+        <Routes>
+          {/* Root redirect */}
+          <Route path="/" element={<Root />} />
 
-export default App;
+          {/* Auth routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Protected Dashboard routes */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute>
+                <Portfolio />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/risk-metrics"
+            element={
+              <ProtectedRoute>
+                <RiskMetrics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alerts"
+            element={
+              <ProtectedRoute>
+                <Alerts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/historical-prices"
+            element={
+              <ProtectedRoute>
+                <HistoricalPrices />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </UserProvider>
+  );
+};
+
+// Protect routes
+const ProtectedRoute = ({ children }) => {
+  const { user, userLoading } = useContext(UserContext);
+  const token = localStorage.getItem("token");
+
+  if (userLoading) return <div>Loading...</div>;
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 const Root = () => {
   // Check if token exists in localStorage
@@ -31,9 +98,10 @@ const Root = () => {
 
   // Redirect to dashboard if authenticated, otherwise to login
   return isAuthenticated ? (
-    <Navigate to="/dashboard" />
+    <Navigate to="/home" />
   ) : (
     <Navigate to="/login" />
   );
 };
 
+export default App;

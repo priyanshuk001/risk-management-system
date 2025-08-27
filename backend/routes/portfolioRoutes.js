@@ -15,4 +15,5 @@ router.put("/update/:id", protect, update_asset);
 router.delete("/delete/:id/:type", protect, delete_asset);
 router.get("/getall", protect, get_all);
 
+
 module.exports = router;

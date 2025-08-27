@@ -1,11 +1,22 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../../context/UserContext";
 import AuthLayout from "./AuthLayout";
+import { validateEmail } from "../../utils/helper";
+
 
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(null);
+
+  const { updateUser } = useContext(UserContext);
+  const navigate = useNavigate();
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,8 +29,27 @@ const Login = () => {
       return;
     }
     setError("");
-    // Login API call here
-  }
+
+    try {
+      const response = await axiosInstance.post(API_PATHS.AUTH.LOGIN, {
+        email,
+        password,
+      });
+      const { token, user } = response.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(user);
+        navigate("/home");
+      }
+    } catch (error) {
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    }
+  };
 
   return (
     <AuthLayout>
@@ -30,6 +60,8 @@ const Login = () => {
           <input
             type="email"
             name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             placeholder="you@example.com"
             className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none"
@@ -41,6 +73,8 @@ const Login = () => {
             <input
               type={showPassword ? "text" : "password"}
               name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
               className="w-full mt-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:outline-none pr-10"
@@ -54,6 +88,7 @@ const Login = () => {
             </button>
           </div>
         </div>
+        {error && <p className="text-red-500 text-xs italic">{error}</p>}
         <button
           type="submit"
           className="w-full bg-sky-700 text-white py-2 rounded-lg hover:bg-sky-800 transition"
