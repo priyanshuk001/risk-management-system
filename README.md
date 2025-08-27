@@ -1,6 +1,6 @@
-# Risk Management System - Frontend
+# Risk Management System
 
-This is the frontend for the **Risk Management System**, a web application built with React.js. It provides a clean user interface for user authentication, comprehensive portfolio management (covering equities, cryptocurrencies, bonds, and commodities), and insightful performance trend visualization.
+This is the **Risk Management System**, a web application built with React.js. It provides a clean user interface for user authentication, comprehensive portfolio management (covering equities, cryptocurrencies, bonds, and commodities), and insightful performance trend visualization.
 
 ---
 
