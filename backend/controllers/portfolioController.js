@@ -174,31 +174,36 @@ exports.get_portfolio_summary = async (req, res) => {
     };
 
     // calculate values
-    let equityTotal = 0;
+    let equityTotal = 0, equityInvested = 0;
     for (let eq of equities) {
       const price = await fetchPrice(API_PATHS.ASSETS.GET_EQUITY_PRICE(eq.symbol));
       equityTotal += price * eq.quantity;
+      equityInvested += (eq.buyPrice || 0) * eq.quantity;
     }
 
-    let bondTotal = 0;
+    let bondTotal = 0, bondInvested = 0;
     for (let bond of bonds) {
       const price = await fetchPrice(API_PATHS.ASSETS.GET_BOND_PRICE(bond.symbol));
       bondTotal += price * bond.quantity;
+      bondInvested += (bond.buyPrice || 0) * bond.quantity;
     }
 
-    let cryptoTotal = 0;
+    let cryptoTotal = 0, cryptoInvested = 0;
     for (let c of cryptos) {
       const price = await fetchPrice(API_PATHS.ASSETS.GET_CRYPTO_PRICE(c.symbol));
       cryptoTotal += price * c.quantity;
+      cryptoInvested += (c.buyPrice || 0) * c.quantity;
     }
 
-    let commodityTotal = 0;
+    let commodityTotal = 0, commodityInvested = 0;
     for (let com of commodities) {
       const price = await fetchPrice(API_PATHS.ASSETS.GET_COMMODITY_PRICE(com.symbol));
       commodityTotal += price * com.quantity;
+      commodityInvested += (com.buyPrice || 0) * com.quantity;
     }
 
     const totalValue = equityTotal + bondTotal + cryptoTotal + commodityTotal;
+    const totalInvested = equityInvested + bondInvested + cryptoInvested + commodityInvested;
 
     const toPercent = (val) =>
       totalValue > 0 ? ((val / totalValue) * 100).toFixed(2) : 0;
@@ -206,17 +211,35 @@ exports.get_portfolio_summary = async (req, res) => {
     res.status(200).json({
       success: true,
       totalValue,
+      totalInvested,
       breakdown: {
-        equities: { value: equityTotal, percentage: toPercent(equityTotal) },
-        bonds: { value: bondTotal, percentage: toPercent(bondTotal) },
-        cryptos: { value: cryptoTotal, percentage: toPercent(cryptoTotal) },
-        commodities: { value: commodityTotal, percentage: toPercent(commodityTotal) },
+        equities: { 
+          value: equityTotal, 
+          invested: equityInvested,
+          percentage: toPercent(equityTotal) 
+        },
+        bonds: { 
+          value: bondTotal, 
+          invested: bondInvested,
+          percentage: toPercent(bondTotal) 
+        },
+        cryptos: { 
+          value: cryptoTotal, 
+          invested: cryptoInvested,
+          percentage: toPercent(cryptoTotal) 
+        },
+        commodities: { 
+          value: commodityTotal, 
+          invested: commodityInvested,
+          percentage: toPercent(commodityTotal) 
+        },
       },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 exports.evaluate_risk = async (req, res) => {

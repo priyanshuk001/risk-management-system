@@ -17,32 +17,33 @@ const VaRCards = ({ portfolioData }) => {
     setError(null);
 
     try {
-      // ✅ Direct call to backend risk evaluation
-      const response = await axiosInstance.post(
-        API_PATHS.PORTFOLIO.EVALUATE_RISK,
-        {
-          portfolio: portfolioData, // backend will handle price fetching & calculations
-          numDays: 252,
-        }
-      );
+      // ✅ Fixed: Use GET request as backend expects
+      const response = await axiosInstance.get(API_PATHS.PORTFOLIO.EVALUATE_RISK);
+      // ✅ Fixed: Extract data from correct nested structure
+      const { varMetrics: backendVarMetrics, stressResults } =
+        response.data.risk;
 
-      const { varMetrics: backendVarMetrics, stressResults, alerts } =
-        response.data;
+      // ✅ Add null checks for backend response
+      if (!backendVarMetrics) {
+        throw new Error('Risk metrics data not available from backend');
+      }
 
-      // Expected Shortfall approximation
-      const es95 = backendVarMetrics.var_95 * 1.25;
-      const es99 = backendVarMetrics.var_99 * 1.25;
+      // Expected Shortfall approximation with null checks
+      const var95 = backendVarMetrics.var_95 || 0;
+      const var99 = backendVarMetrics.var_99 || 0;
+      const es95 = var95 * 1.25;
+      const es99 = var99 * 1.25;
 
       setVarMetrics({
-        var95: Math.round(backendVarMetrics.var_95 || 0),
-        var99: Math.round(backendVarMetrics.var_99 || 0),
+        var95: Math.round(var95),
+        var99: Math.round(var99),
         expectedShortfall95: Math.round(es95),
         expectedShortfall99: Math.round(es99),
         stressResults: stressResults || [],
-        alerts: alerts || [],
         lastUpdated: new Date().toLocaleTimeString(),
       });
-    } catch (err) {
+    } 
+    catch (err) {
       console.error("Error calculating VaR:", err);
       const errorMessage =
         err.response?.data?.message ||
@@ -50,7 +51,8 @@ const VaRCards = ({ portfolioData }) => {
         err.message ||
         "Unknown error occurred";
       setError(`Failed to calculate risk metrics: ${errorMessage}`);
-    } finally {
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -88,18 +90,6 @@ const VaRCards = ({ portfolioData }) => {
 
   return (
     <div className="space-y-4">
-      {/* Alerts */}
-      {varMetrics.alerts.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h4 className="text-yellow-800 font-medium mb-2">Risk Alerts</h4>
-          <ul className="text-yellow-700 text-sm space-y-1">
-            {varMetrics.alerts.map((alert, idx) => (
-              <li key={idx}>{alert}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* VaR Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-orange-400">

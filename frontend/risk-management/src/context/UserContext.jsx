@@ -6,19 +6,19 @@ export const UserContext = createContext();
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(true); // ✅ Start with true to prevent premature redirects
   const [userError, setUserError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // ✅ Added authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const updateUser = (userData) => {
     setUser(userData);
-    setIsAuthenticated(!!userData); // ✅ Update auth state when user changes
+    setIsAuthenticated(!!userData);
   };
 
   const clearUser = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem("token"); // ✅ Clear token when clearing user
+    localStorage.removeItem("token");
   };
 
   // ✅ Enhanced login function
@@ -79,23 +79,28 @@ const UserProvider = ({ children }) => {
     window.location.href = "/login";
   };
 
-  // fetch /auth/getUser if token exists
+  // ✅ Enhanced fetchUser with proper loading management
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("token");
+    
     if (!token) {
       setUser(null);
       setIsAuthenticated(false);
+      setUserLoading(false); // ✅ Important: Set loading to false when no token
       return;
     }
 
     try {
-      setUserLoading(true);
+      // Don't set loading to true if it's already the initial load
+      if (!userLoading) {
+        setUserLoading(true);
+      }
       setUserError(null);
 
       const { data } = await axiosInstance.get(API_PATHS.AUTH.GET_USER_INFO);
       
       // ✅ Handle different response structures
-      const userData = data.user || data; // Flexible response handling
+      const userData = data.user || data;
       setUser(userData);
       setIsAuthenticated(true);
 
@@ -103,19 +108,20 @@ const UserProvider = ({ children }) => {
       console.error("Failed to fetch user:", error);
       
       // ✅ Handle specific error cases
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
         // Token is invalid/expired
         localStorage.removeItem("token");
         setUser(null);
         setIsAuthenticated(false);
+      } else {
+        // For other errors, keep user if they exist (network issues, etc.)
+        const errorMessage = error?.response?.data?.message || error.message || "Failed to fetch user data";
+        setUserError(errorMessage);
       }
-      
-      const errorMessage = error?.response?.data?.message || error.message || "Failed to fetch user data";
-      setUserError(errorMessage);
     } finally {
-      setUserLoading(false);
+      setUserLoading(false); // ✅ Always set loading to false
     }
-  }, []);
+  }, []); // ✅ Removed userLoading dependency to prevent infinite loops
 
   // ✅ Function to check if user is authenticated
   const checkAuth = useCallback(() => {
@@ -123,17 +129,22 @@ const UserProvider = ({ children }) => {
     return !!(token && user);
   }, [user]);
 
-  // on mount, load user
+  // ✅ Enhanced initial load effect
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    // Only fetch user on mount, not on every fetchUser change
+    const initAuth = async () => {
+      await fetchUser();
+    };
+    
+    initAuth();
+  }, []); // ✅ Empty dependency array - only run on mount
 
   // ✅ Clear error after some time
   useEffect(() => {
     if (userError) {
       const timer = setTimeout(() => {
         setUserError(null);
-      }, 5000); // Clear error after 5 seconds
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
@@ -152,10 +163,10 @@ const UserProvider = ({ children }) => {
         updateUser,
         clearUser,
         fetchUser,
-        login,        // ✅ Direct login function
-        register,     // ✅ Direct register function
-        logout,       // ✅ Logout function
-        checkAuth,    // ✅ Auth check function
+        login,
+        register,
+        logout,
+        checkAuth,
       }}
     >
       {children}
