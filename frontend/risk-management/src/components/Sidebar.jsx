@@ -8,8 +8,6 @@ import {
   BarChart,
   LogOut,
   X,
-  User,
-  Settings
 } from "lucide-react";
 import { UserContext } from "../context/UserContext"; // Adjust path as needed
 
@@ -20,9 +18,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { name: "Dashboard", path: "/home", icon: LayoutDashboard },
     { name: "Portfolio", path: "/portfolio", icon: Briefcase },
     { name: "Alerts", path: "/alerts", icon: Bell },
-    { name: "Historical Prices", path: "/historical-prices", icon: BarChart },
-    { name: "Profile", path: "/profile", icon: User },
-    { name: "Settings", path: "/settings", icon: Settings }
+    { name: "Historical Prices", path: "/historical-prices", icon: BarChart }
   ];
 
   const handleNavClick = () => {

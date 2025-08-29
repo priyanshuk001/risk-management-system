@@ -6,6 +6,12 @@ const axios = require("axios");
 const { BASE_URL, API_PATHS } = require("../utils/apiPaths");
 const { evaluatePortfolioRisk } = require("../services/riskEngine"); // adjust path if needed
 const AlertHistory = require("../models/alerthistory"); // alert model
+const { 
+  getHistoricalStockPrices, 
+  getHistoricalCryptoPrices, 
+  getHistoricalBondYields, 
+  getHistoricalCommodityPrices 
+} = require('../services/historicalPriceService'); // Adjust path as needed
 
 
 // Helper fn: correct model choose karo
@@ -325,4 +331,126 @@ exports.evaluate_risk = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error", error: err.message });
   }
 };
+
+
+exports.get_historical_data = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const numDays = parseInt(req.query.days) || 365; // Default to 365 days, allow override
+    
+    console.log(`📊 Fetching ${numDays} days of portfolio value history for user: ${userId}`);
+
+    // Fetch user's assets from DB
+    const equities = await Equity.find({ userId });
+    const bonds = await Bond.find({ userId });
+    const cryptos = await Crypto.find({ userId });
+    const commodities = await Commodity.find({ userId });
+
+    // Object to store daily portfolio values: { "2024-08-29": 15420.50, "2024-08-28": 15100.23 }
+    const portfolioDailyValues = {};
+
+    // Helper function to add daily values to portfolio total
+    const addDailyValues = (historicalData, quantity) => {
+      for (const dayData of historicalData) {
+        const date = dayData.date.split('T')[0]; // Extract YYYY-MM-DD
+        const dailyValue = (dayData.close || dayData.value) * quantity; // Handle both price and value fields
+        
+        if (!portfolioDailyValues[date]) {
+          portfolioDailyValues[date] = 0;
+        }
+        portfolioDailyValues[date] += dailyValue;
+      }
+    };
+
+    // Fetch and aggregate historical prices for equities
+    console.log(`📈 Processing ${equities.length} equities...`);
+    for (const equity of equities) {
+      try {
+        const history = await getHistoricalStockPrices(equity.symbol, numDays);
+        addDailyValues(history, equity.quantity);
+        console.log(`✅ Added ${equity.symbol} (${equity.quantity} shares)`);
+      } catch (error) {
+        console.error(`❌ Error fetching equity ${equity.symbol}:`, error.message);
+      }
+    }
+
+    // Fetch and aggregate historical yields for bonds
+    console.log(`📊 Processing ${bonds.length} bonds...`);
+    for (const bond of bonds) {
+      try {
+        const seriesId = bond.symbol || bond.seriesId;
+        if (seriesId) {
+          const history = await getHistoricalBondYields(seriesId, numDays);
+          addDailyValues(history, bond.quantity);
+          console.log(`✅ Added ${seriesId} bond (${bond.quantity} units)`);
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching bond ${bond.symbol}:`, error.message);
+      }
+    }
+
+    // Fetch and aggregate historical prices for cryptos
+    console.log(`₿ Processing ${cryptos.length} cryptocurrencies...`);
+    for (const crypto of cryptos) {
+      try {
+        const history = await getHistoricalCryptoPrices(crypto.symbol, numDays);
+        addDailyValues(history, crypto.quantity);
+        console.log(`✅ Added ${crypto.symbol} (${crypto.quantity} units)`);
+      } catch (error) {
+        console.error(`❌ Error fetching crypto ${crypto.symbol}:`, error.message);
+      }
+    }
+
+    // Fetch and aggregate historical prices for commodities
+    console.log(`🏅 Processing ${commodities.length} commodities...`);
+    for (const commodity of commodities) {
+      try {
+        const history = await getHistoricalCommodityPrices(commodity.name || commodity.symbol, numDays);
+        addDailyValues(history, commodity.quantity);
+        console.log(`✅ Added ${commodity.name} (${commodity.quantity} units)`);
+      } catch (error) {
+        console.error(`❌ Error fetching commodity ${commodity.name}:`, error.message);
+      }
+    }
+
+    // Convert to sorted array format for frontend consumption
+    const sortedDates = Object.keys(portfolioDailyValues).sort();
+    const portfolioHistory = sortedDates.map(date => ({
+      date,
+      totalValue: parseFloat(portfolioDailyValues[date].toFixed(2))
+    }));
+
+    // Calculate some useful metrics
+    const currentValue = portfolioHistory.length > 0 ? portfolioHistory[portfolioHistory.length - 1].totalValue : 0;
+    const startValue = portfolioHistory.length > 0 ? portfolioHistory[0].totalValue : 0;
+    const totalReturn = startValue > 0 ? ((currentValue - startValue) / startValue) * 100 : 0;
+
+    console.log(`✅ Portfolio history calculated: ${portfolioHistory.length} data points`);
+    console.log(`📊 Portfolio value: $${startValue.toFixed(2)} → $${currentValue.toFixed(2)} (${totalReturn.toFixed(2)}%)`);
+
+    res.status(200).json({
+      success: true,
+      portfolioHistory,
+      summary: {
+        totalAssets: equities.length + bonds.length + cryptos.length + commodities.length,
+        dataRange: `${numDays} days`,
+        dataPoints: portfolioHistory.length,
+        currentValue,
+        startValue,
+        totalReturn: parseFloat(totalReturn.toFixed(2)),
+        fetchedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching portfolio historical data:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+
 

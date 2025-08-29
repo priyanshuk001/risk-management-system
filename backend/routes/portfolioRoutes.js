@@ -5,7 +5,8 @@ const {
   delete_asset,
   get_all,
   get_portfolio_summary,
-  evaluate_risk
+  evaluate_risk,
+  get_historical_data
 } = require("../controllers/portfolioController");
 const { protect } = require("../middlewares/authMiddleware");
 
@@ -18,6 +19,7 @@ router.delete("/delete/:id/:type", protect, delete_asset);
 router.get("/getall", protect, get_all);
 router.get("/getportfoliosummary", protect, get_portfolio_summary);
 router.get("/evaluate-risk",protect, evaluate_risk);
+router.get('/historical', protect, get_historical_data);
 
 
 module.exports = router;

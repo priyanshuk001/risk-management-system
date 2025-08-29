@@ -15,7 +15,6 @@ import Signup from "./pages/Auth/Signup";
 // Dashboard Pages
 import Home from "./pages/Dashboard/Home";
 import Portfolio from "./pages/Dashboard/Portfolio";
-import RiskMetrics from "./pages/Dashboard/RiskMetrics";
 import Alerts from "./pages/Dashboard/Alerts";
 import HistoricalPrices from "./pages/Dashboard/HistoricalPrices";
 
@@ -45,14 +44,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Portfolio />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/risk-metrics"
-            element={
-              <ProtectedRoute>
-                <RiskMetrics />
               </ProtectedRoute>
             }
           />

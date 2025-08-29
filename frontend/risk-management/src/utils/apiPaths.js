@@ -14,6 +14,8 @@ export const API_PATHS = {
     GET_ALL: "/api/v1/portfolio/getall",
     GET_SUMMARY: "/api/v1/portfolio/getportfoliosummary",
     EVALUATE_RISK: "/api/v1/portfolio/evaluate-risk",
+    GET_HISTORICAL: "/api/v1/portfolio/historical",
+    GET_HISTORICAL_DAYS: (days) => `/api/v1/portfolio/historical?days=${days}`,
   },
 
   ASSETS: {
